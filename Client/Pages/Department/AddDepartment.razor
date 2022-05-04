@@ -1,0 +1,51 @@
+﻿@page "/adddepartment"
+@using BlazorHRApp.Shared.ModelVM
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<br />
+<h3>Add Department</h3>
+<br />
+<EditForm Model="@department" OnValidSubmit="Save">
+<DataAnnotationsValidator/>
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name"
+                              @bind-Value="department.DName" For="@(() => department.DName)"/>                
+            </MudCardContent>
+            <br />
+            
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@Save" >Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Cancel">Cancel</MudButton>
+            
+        </MudCard>
+    </MudItem>
+</MudGrid>
+</EditForm>
+@code {
+    DepartmentVM department = new DepartmentVM();
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+    protected async Task Save()
+    {
+        var response = await Http.PostAsJsonAsync("api/Department", @department);
+        DepartmentVM? depResponse = await response.Content.ReadFromJsonAsync<DepartmentVM>();
+        if (depResponse?.DId > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("departmentList");
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("departmentList");
+    }
+
+}

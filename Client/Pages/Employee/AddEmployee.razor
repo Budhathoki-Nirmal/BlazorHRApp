@@ -1,0 +1,92 @@
+﻿@page "/addemployee"
+@using BlazorHRApp.Shared.ModelVM
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<br />
+<h3>Add Employee</h3>
+<br />
+<EditForm Model="@employee" OnValidSubmit="Save">
+<DataAnnotationsValidator/>
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name"
+                              @bind-Value="employee.EName" For="@(() => employee.EName)"/> 
+                <MudTextField Label="Address"
+                              @bind-Value="employee.EAddress" For="@(() => employee.EAddress)"/> 
+                <MudTextField Label="Email"
+                              @bind-Value="employee.Email" For="@(() => employee.Email)"/> 
+                <MudTextField Label="Mobile"
+                              @bind-Value="employee.Mobile" For="@(() => employee.Mobile)"/>
+                 <MudDatePicker Label="Joining Date" @bind-Date="employee.JoinDate" DisableToolbar="true" />
+
+                <MudSelect Label="Department" 
+                @bind-Value="employee.DId" >
+                    <MudSelectItem Value="0">Please Select</MudSelectItem>
+                    @foreach (var d in department)
+                    {
+                    <MudSelectItem Value="d.DId">@d.DName</MudSelectItem>
+                    }
+                    
+                </MudSelect>
+                <br />
+                <MudSelect Label="Position" 
+                @bind-Value="employee.PId" >
+                    <MudSelectItem Value="0">Please Select</MudSelectItem>
+                    @foreach (var p in position)
+                    {
+                    <MudSelectItem Value="p.PId">@p.PName</MudSelectItem>
+                    }
+                    
+                </MudSelect> 
+                <br />
+                <div class="form-group">
+                        <InputSelect @bind-Value="employee.GenderVM" Label="Gender" Class="form-control">
+                            @foreach (var g in Enum.GetValues(typeof(Gender)))
+                            {
+                                <option value="@g">@g</option>
+                            }
+                        </InputSelect>
+                    </div>
+            </MudCardContent>
+            <br />
+            
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@Save" >Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Cancel">Cancel</MudButton>
+            
+        </MudCard>
+    </MudItem>
+</MudGrid>
+</EditForm>
+@code {
+    DateTime? date = DateTime.Today;
+    List<DepartmentVM> department = new List<DepartmentVM>();
+    List<PositionVM> position = new List<PositionVM>();
+    EmployeeVM employee = new EmployeeVM();
+    protected override async Task OnInitializedAsync()
+    {
+        department = await Http.GetFromJsonAsync<List<DepartmentVM>>("api/Department");
+        position = await Http.GetFromJsonAsync<List<PositionVM>>("api/Position");
+        
+    }
+    protected async Task Save()
+    {
+        var response = await Http.PostAsJsonAsync("api/Employee", @employee);
+        EmployeeVM? empResponse = await response.Content.ReadFromJsonAsync<EmployeeVM>();
+        if (empResponse?.EId > 0)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Saved Successfully!");
+            NavigationManager.NavigateTo("employeeList");
+        }
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("employeeList");
+    }
+
+}

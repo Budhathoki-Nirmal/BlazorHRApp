@@ -1,0 +1,66 @@
+﻿@page "/positionList"
+@using BlazorHRApp.Shared.ModelVM
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@{
+    int i = 1;
+}
+<br />
+<h3>Positions</h3>
+<br />
+@if (positions == null)
+{
+    <text>Loading...</text>
+}
+else
+{
+<div>
+    <div class="form-group">
+        <a class="btn btn-success" href="/addposition"><i class="oi oi-plus"></i> Create New</a>
+    </div>
+    <br>
+    @if (positions != null)
+    {
+        <MudTable Items="@positions">
+            <HeaderContent>
+                <MudTh>SN</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nr">@(i++)</MudTd>
+                <MudTd DataLabel="Sign">@context.PName</MudTd>
+                <MudTd>
+                    <a class="btn btn-success" href="/editposition/@context.PId">Edit</a>
+                    <button class="btn btn-danger" @onclick="@(() => Delete(context.PId))">Delete</button>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+        
+    }
+</div>
+}
+
+@code {
+    
+    List<PositionVM>? positions = new List<PositionVM>();
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/Position");
+        response.EnsureSuccessStatusCode();
+        positions = await response.Content.ReadFromJsonAsync<List<PositionVM>>();
+    }
+    protected async Task Delete(int Id)
+    {
+        var pos = positions.First(x => x.PId == Id);
+        if (await JsRuntime.InvokeAsync<bool>("confirm", $"Do you want to delete {pos.PName}'s Record?"))
+        {
+            await Http.DeleteAsync($"api/position/{Id}");
+            await OnInitializedAsync();
+        }
+    }
+}

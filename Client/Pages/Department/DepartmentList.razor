@@ -1,0 +1,65 @@
+﻿@page "/departmentList"
+@using BlazorHRApp.Shared.ModelVM
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+@{
+    int i = 1;
+}
+<br />
+<h3>Departments</h3>
+<br />
+@if (departments == null)
+{
+    <text>Loading...</text>
+}
+else
+{
+    <div>
+    <div class="form-group">
+        <a class="btn btn-success" href="/adddepartment"><i class="oi oi-plus"></i> Create New</a>
+    </div>
+    <br>
+    @if (departments != null)
+    {
+        <MudTable Items="@departments">
+            <HeaderContent>
+                <MudTh>SN</MudTh>
+                <MudTh>Department</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nr">@(i++)</MudTd>
+                <MudTd DataLabel="Sign">@context.DName</MudTd>
+                <MudTd>
+                    <a class="btn btn-success" href="/editdepartment/@context.DId">Edit</a>
+                    <button class="btn btn-danger" @onclick="@(() => Delete(context.DId))">Delete</button>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
+</div>
+}
+
+@code {
+    
+    List<DepartmentVM>? departments = new List<DepartmentVM>();
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await Http.GetAsync("api/Department");
+        response.EnsureSuccessStatusCode();
+        departments = await response.Content.ReadFromJsonAsync<List<DepartmentVM>>();
+    }
+    protected async Task Delete(int Id)
+    {
+        var dep = departments.First(x => x.DId == Id);
+        if (await JsRuntime.InvokeAsync<bool>("confirm", $"Do you want to delete {dep.DName}'s Record?"))
+        {
+            await Http.DeleteAsync($"api/department/{Id}");
+            await OnInitializedAsync();
+        }
+    }
+}

@@ -1,0 +1,66 @@
+﻿@page "/"
+@using BlazorHRApp.Shared.ModelVM
+
+@inject HttpClient Http
+@inject IJSRuntime JsRuntime
+
+<MudContainer Class="mt-16 px-8" MaxWidth="MaxWidth.False">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <MudText Typo="Typo.h6">Total Employees</MudText>
+                <MudText>@employee.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <MudText Typo="Typo.h6">Total Departments</MudText>
+                <MudText>@department.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100px;">
+                <MudText Typo="Typo.h6">Total Positions</MudText>
+                <MudText>@position.Count</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 150px;"></MudPaper>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudPaper Elevation="2" Class="pa-4" Style="height: 150px;"></MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+        <MudItem xs="12" sm="6">
+            <MudPaper Elevation="2" Class="pa-4" Style="height: 100%">
+                <MudChart ChartType="ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@labels">
+                    <CustomGraphics>
+                        <text class="donut-inner-text" x="47%" y="35%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="2">Total Employee</text>
+                        <text class="donut-inner-text" x="47%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="black" font-family="Helvetica" font-size="5">@data.Sum().ToString()</text>
+                    </CustomGraphics>
+                </MudChart>
+            </MudPaper>
+        </MudItem>
+
+    </MudGrid>
+</MudContainer>
+
+@code {
+    public double[] data={1,2,3};
+    public string[] labels = { "Male", "Female", "Other"};
+
+
+    List<DepartmentVM>? department = new List<DepartmentVM>();
+    List<PositionVM>? position = new List<PositionVM>();
+    List<EmployeeVM>? employee = new List<EmployeeVM>();
+    protected override async Task OnInitializedAsync()
+    {
+        department = await Http.GetFromJsonAsync<List<DepartmentVM>>("api/Department");
+        position = await Http.GetFromJsonAsync<List<PositionVM>>("api/Position");
+        employee = await Http.GetFromJsonAsync<List<EmployeeVM>>("api/Employee");
+        
+    }
+}

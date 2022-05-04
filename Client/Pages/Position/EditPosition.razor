@@ -1,0 +1,52 @@
+﻿@page "/editposition/{Id}"
+@using BlazorHRApp.Shared.ModelVM
+
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JsRuntime
+
+<br />
+<h3>Edit Position</h3>
+<br />
+<EditForm Model="@position" OnValidSubmit="Save">
+<DataAnnotationsValidator/>
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudCard>
+            <MudCardContent>
+                <MudTextField Label="Name"
+                              @bind-Value="position.PName" For="@(() => position.PName)"/>
+                <MudTextField Label="Salary" Class="mt-3"
+                              @bind-Value="position.Salary" For="@(() => position.Salary)"/>
+                
+            </MudCardContent>
+            <br />
+            
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" @onclick="@Save" >Save</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" @onclick="@Cancel">Cancel</MudButton>
+            
+        </MudCard>
+    </MudItem>
+</MudGrid>
+</EditForm>
+
+@code {
+    [Parameter]
+    public string Id{ get; set; }
+    PositionVM? position = new PositionVM();
+    protected override async Task OnInitializedAsync()
+    {
+        position = await Http.GetFromJsonAsync<PositionVM>("api/position/" + Id);
+    }
+    protected async Task Save()
+    {
+        var response = await Http.PutAsJsonAsync("api/Position/" + Id, @position);
+            await JsRuntime.InvokeVoidAsync("alert", "Updated Successfully!");
+            NavigationManager.NavigateTo("positionList");
+
+    }
+    void Cancel()
+    {
+        NavigationManager.NavigateTo("positionList");
+    }
+}

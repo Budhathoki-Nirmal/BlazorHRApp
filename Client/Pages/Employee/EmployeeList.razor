@@ -1,0 +1,73 @@
+﻿@page "/employeeList"
+@using BlazorHRApp.Shared.ModelVM
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+
+@inject IJSRuntime JsRuntime
+@{
+    int i = 1;
+}
+
+<br />
+<h3>Employees</h3>
+<br />
+@if (employees == null)
+{
+    <text>Loading...</text>
+}
+
+else
+{
+    <div class="form-group">
+        <a class="btn btn-success" href="/addemployee"><i class="oi oi-plus"></i> Create New</a>
+    </div>
+    <br />
+    @if (employees != null)
+    {
+        <MudTable Items="@employees">
+            <HeaderContent>
+                <MudTh>SN</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Department</MudTh>
+                <MudTh>Position</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nr">@(i++)</MudTd>
+                <MudTd DataLabel="Sign">@context.EName</MudTd>
+                <MudTd DataLabel="Sign">@context.DName</MudTd>
+                <MudTd DataLabel="Sign">@context.PName</MudTd>
+                <MudTd DataLabel="Sign">@context.Email</MudTd>
+                <MudTd>
+                    <a class="btn btn-success" href="/editemployee/@context.EId">Edit</a>
+                    <button class="btn btn-danger" @onclick="@(() => Delete(context.EId))">Delete</button>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+        
+     }
+}
+
+
+
+@code {
+    
+    List<EmployeeVM> employees = new List<EmployeeVM>();
+    protected override async Task OnInitializedAsync()
+    {
+        employees = await Http.GetFromJsonAsync<List<EmployeeVM>>("api/Employee");
+    }
+    protected async Task Delete(int Id)
+    {
+        var emp = employees.First(x => x.EId == Id);
+        if (await JsRuntime.InvokeAsync<bool>("confirm", $"Do you want to delete {emp.EName}'s Record?"))
+        {
+            await Http.DeleteAsync($"api/employee/{Id}");
+            await OnInitializedAsync();
+        }
+    }
+}
